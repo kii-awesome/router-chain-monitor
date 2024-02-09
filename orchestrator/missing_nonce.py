@@ -29,7 +29,7 @@ class MissingNonceOrchestrator:
         self.VALIDATOR_ADDRESS=self.config_manager.read_config('settings.validator_address', '')
         self.SLEEP_TIME_FOR_EVENT_PROCESSING_IN_SEC = int(self.config_manager.read_config('settings.orch_sleep_time_for_event_processing_in_sec', 2))
         self.CHAIN_ENV = self.config_manager.read_config('settings.environment', 'testnet')
-        self.lcd_url = self.config_manager.read_config('settings.lcd_url', 'https://lcd.testnet.routerchain.dev/')
+        self.lcd_url = self.config_manager.read_config('settings.lcd_url', '')
 
 
     def print_debug(self, *args, **kwargs):
