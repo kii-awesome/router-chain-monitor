@@ -1,0 +1,122 @@
+{
+    "421613": {
+        "name": "Arb-Goerli",
+        "rpc": "https://arb-goerli.g.alchemy.com/v2/OCG30MHV0NIKbuei5KGyhbTZb6UNnRi7",
+        "buffer": 0
+    },
+    "43113": {
+        "name": "Avalanche Fuji",
+        "rpc": "https://rpc.ankr.com/avalanche_fuji",
+        "buffer": 0
+    },
+    "5001": {
+        "name": "Mantle Testnet",
+        "rpc": "https://rpc.testnet.mantle.xyz",
+        "buffer": 0
+    },
+    "5": {
+        "name": "Goerli",
+        "rpc": "https://goerli.infura.io/v3/950ca3d0cc06469d93328cf3975282ff",
+        "buffer": 0
+    },
+    "534353": {
+        "name": "Scroll Alpha",
+        "rpc": "https://scroll-alphanet.public.blastapi.io",
+        "buffer": 0
+    },
+    "80001": {
+        "name": "Polygon Mumbai",
+        "rpc": "https://rpc.ankr.com/polygon_mumbai",
+        "buffer": 0
+    },
+    "2494104990": {
+        "name": "shasta-testnet-tron",
+        "rpc": "https://grpc.shasta.trongrid.io:50051",
+        "buffer": 0
+    },
+    "59140": {
+        "name": "linea-testnet",
+        "rpc": "https://linea-goerli.infura.io/v3/a295db5342bd4cd6a4be06492a14b65d",
+        "buffer": 0
+    },
+    "137": {
+        "name": "Polygon Mainnet",
+        "rpc": "https://rpc.ankr.com/polygon",
+        "buffer": 0
+    },
+    "42161": {
+        "name": "Arbitrum One",
+        "rpc": "https://arbitrum-one.publicnode.com",
+        "buffer": 0
+    },
+    "43114": {
+        "name": "Avalanche Mainnet",
+        "rpc": "https://rpc.ankr.com/avalanche",
+        "buffer": 0
+    },
+    "56": {
+        "name": "Binance Smart Chain",
+        "rpc": "https://bsc-dataseed.binance.org",
+        "buffer": 0
+    },
+    "1101": {
+        "name": "Polygon zkEVM",
+        "rpc": "https://1rpc.io/polygon/zkevm",
+        "buffer": 0
+    },
+    "1313161554": {
+        "name": "Aurora",
+        "rpc": "https://mainnet.aurora.dev",
+        "buffer": 0
+    },
+    "169": {
+        "name": "Manta",
+        "rpc": "https://1rpc.io/manta",
+        "buffer": 0
+    },
+    "250": {
+        "name": "Fantom Opera",
+        "rpc": "https://rpcapi.fantom.network",
+        "buffer": 0
+    },
+    "30": {
+        "name": "RSK Mainnet",
+        "rpc": "https://public-node.rsk.co",
+        "buffer": 0
+    },
+    "324": {
+        "name": "zkSync Mainnet",
+        "rpc": "https://zksync.meowrpc.com",
+        "buffer": 0
+    },
+    "5000": {
+        "name": "Mantle Mainnet",
+        "rpc": "https://mantle.publicnode.com",
+        "buffer": 0
+    },
+    "10": {
+        "name": "Optimistic Ethereum",
+        "rpc": "https://mainnet.optimism.io",
+        "buffer": 0
+    },
+    "534352": {
+        "name": "Scroll Mainnet",
+        "rpc": "https://rpc.scroll.io",
+        "buffer": 0
+    },
+    "59144": {
+        "name": "linea-mainnet",
+        "rpc": "https://rpc.linea.build",
+        "buffer": 0
+    },
+    "728126428": {
+        "name": "tron-mainnet",
+        "rpc": "https://necessary-late-glade.tron-mainnet.quiknode.pro/d9c55f8286f5352935977c56397bcd77fe0a5783/jsonrpc/",
+        "buffer": 0
+    },
+    "8453": {
+        "name": "Base",
+        "rpc": "https://base.llamarpc.com",
+        "buffer": 0
+    }
+}

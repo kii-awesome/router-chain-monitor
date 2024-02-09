@@ -1,0 +1,11 @@
+settings:
+  validator_address: "routervaloper...."
+  debug_mode: false
+  enable_orch_validation: true
+  orch_voting_power_threshold: 10
+  orch_sleep_time_for_event_processing_in_sec: 2
+  validate_min_resolve_time_in_sec: 60
+  pager_duty_routing: "04....aa"
+  orchestrator_health_endpoint: "http://IP:8000/health"
+  schedule_interval_minutes: 1
+  lcd_url: "LCD-ENDPOINT"
