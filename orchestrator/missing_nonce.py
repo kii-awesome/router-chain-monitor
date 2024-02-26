@@ -173,16 +173,16 @@ class MissingNonceOrchestrator:
         res = self.process_validator(args_list)
         return res
 
-    def get_orchestrators_by_pending_nonce(self, contract_type="GATEWAY"):
+    def get_orchestrators_by_pending_nonce(self, validator_info, contract_type="GATEWAY"):
         contract_type = ContractType(contract_type)
         if contract_type not in ContractType:
             print("contract_type is not supported, exiting")
             return None
 
-        endpoint = self.lcd_url
-        validators_info_endpoint = f"{endpoint}/cosmos/staking/v1beta1/validators/{self.VALIDATOR_ADDRESS}"
-        result = self.fetch_json(validators_info_endpoint)
+        # validators_info_endpoint = f"{endpoint}/cosmos/staking/v1beta1/validators/{self.VALIDATOR_ADDRESS}"
+        # validator_info = self.fetch_json(validators_info_endpoint)
 
+        endpoint = self.lcd_url
         multi_chain_endpoint = f"{endpoint}/router-protocol/router-chain/multichain/contract_config"
         multi_chain_config_result = self.fetch_json(multi_chain_endpoint)
         multi_chain_config = self.get_multi_chain_config(multi_chain_config_result)
@@ -202,7 +202,7 @@ class MissingNonceOrchestrator:
         tasks = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
             print(f'Processing {len(chain_infos)} chains: ', chain_infos.keys())
-            args_list = [(chain_id, chain_config, endpoint, result, multi_chain_config, contract_type) for chain_id, chain_config in chain_infos.items()]
+            args_list = [(chain_id, chain_config, endpoint, validator_info, multi_chain_config, contract_type) for chain_id, chain_config in chain_infos.items()]
             results = list(executor.map(self.process_chain_by_id, args_list))
         if not results:
             print("no results found, exiting")

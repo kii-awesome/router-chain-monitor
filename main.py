@@ -12,6 +12,7 @@ from orchestrator.missing_nonce import MissingNonceOrchestrator
 from alert import send_pagerduty_alert
 from orchestrator.health_check import validate_orchestrator_health
 from utils.read_config import ConfigManager
+from orchestrator.get_validator_info import ValidatorInfo
 
 app = Flask(__name__)
 
@@ -22,11 +23,14 @@ class OrchestratorValidator:
         self.orchestrator_health_endpoint = self.config_manager.read_config("settings.orchestrator_health_endpoint", "")
         self.schedule_interval_minutes = int(self.config_manager.read_config("settings.schedule_interval_minutes", "-1"))
         self.missing_nonce_orchestrator = MissingNonceOrchestrator(self.config_manager)
+        self.validator_info = ValidatorInfo(self.config_manager.read_config("settings.lcd_url", ""))
+        self.validator_address=self.config_manager.read_config('settings.validator_address', '')
 
     def get_filtered_results(self, result_json):
         return [r for r in result_json if isinstance(r, dict) and r.get('diff_nonces', 0) > 0]
 
     def send_alert(self, title: str, result: List[Dict[str, Any]]) -> None:
+        # print(f"Alert: {title} - {json.dumps(result)}")
         if self.pager_duty_routing:
             send_pagerduty_alert(self.pager_duty_routing, title, json.dumps(result))
             logging.info("Alert sent: %s", title)
@@ -43,8 +47,15 @@ class OrchestratorValidator:
             logging.info("No unhealthy RPCs found or ORCHESTRATOR_HEALTH_ENDPOINT is not configured.")
 
     def validate_pending_nonce(self) -> None:
+        val_info=self.validator_info.get_validator_info(self.validator_address)
+        
+        validator_health=self.validator_info.validate_info(val_info)
+        if not validator_health.get('isHealthy', False):
+            title = f"Validator Health Alert - {validator_health.get('moniker', '')} is unhealthy"
+            self.send_alert(title, [validator_health])
+
         for source in ["GATEWAY", "VOYAGER"]:
-            result = self.missing_nonce_orchestrator.get_orchestrators_by_pending_nonce(source)
+            result = self.missing_nonce_orchestrator.get_orchestrators_by_pending_nonce(val_info, source)
             if not result:
                 logging.error(f"Failed to get orchestrators by pending nonce for {source}.")
                 continue
@@ -67,18 +78,27 @@ class OrchestratorValidator:
         else:
             health_results['orchestrator_health'] = 'No unhealthy RPCs found or endpoint is not configured.'
         
+        val_info=self.validator_info.get_validator_info(self.validator_address)
+        validator_health=self.validator_info.validate_info(val_info)
         nonce_results = {}
         for source in ["GATEWAY", "VOYAGER"]:
-            result = self.missing_nonce_orchestrator.get_orchestrators_by_pending_nonce(source)
+            result = self.missing_nonce_orchestrator.get_orchestrators_by_pending_nonce(val_info, source)
             if result:
                 result_json = json.loads(result)
                 nonce_results[source] = self.get_filtered_results(result_json)
             else:
                 nonce_results[source] = 'Failed to get data or none found.'
         
+        # health_check: response of /health endpoint from orchestrator
+        # nonce_validation: Validates current nonce and last processed nonce from Router Chain
+        # validator_health: Validates if the validator is jailed or not
+
         return {
-            'health_check': health_results,
-            'nonce_validation': nonce_results
+            'orchestrator_health':{
+                'health_check': health_results["orchestrator_health"],
+                'nonce_validation': nonce_results
+            },
+            'validator_health': validator_health
         }
 
 @app.route('/health', methods=['GET'])
