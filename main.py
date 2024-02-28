@@ -21,9 +21,9 @@ class OrchestratorValidator:
         self.config_manager = ConfigManager(config_file_path)
         self.pager_duty_routing = self.config_manager.read_config("settings.pager_duty_routing", "")
         self.orchestrator_health_endpoint = self.config_manager.read_config("settings.orchestrator_health_endpoint", "")
-        self.schedule_interval_minutes = int(self.config_manager.read_config("settings.schedule_interval_minutes", "-1"))
+        self.schedule_interval_seconds = int(self.config_manager.read_config("settings.schedule_interval_seconds", "-1"))
         self.missing_nonce_orchestrator = MissingNonceOrchestrator(self.config_manager)
-        self.validator_info = ValidatorInfo(self.config_manager.read_config("settings.lcd_url", ""))
+        self.validator_info = ValidatorInfo(self.config_manager.read_config("settings.router_chain_lcd_url", ""))
         self.validator_address=self.config_manager.read_config('settings.validator_address', '')
 
     def get_filtered_results(self, result_json):
@@ -38,6 +38,9 @@ class OrchestratorValidator:
             logging.warning("PAGER_DUTY_ROUTING is not configured. Alert not sent.")
 
     def validate_orchestrator_health_endpoints(self) -> None:
+        if not self.orchestrator_health_endpoint:
+            logging.warning("ORCHESTRATOR_HEALTH_ENDPOINT is not configured. Skipping health check.")
+            return
         orch_health = validate_orchestrator_health(self.orchestrator_health_endpoint)
         if orch_health:
             alert_title = f"Orchestrator Health Alert. {len(orch_health)} RPCs are unhealthy."
@@ -61,7 +64,6 @@ class OrchestratorValidator:
                 continue
             result_json = json.loads(result)
             filtered_result = self.get_filtered_results(result_json)
-            logging.info(f"filter_{source.lower()}_result: {filtered_result}")
 
             if filtered_result:
                 title = f"{source} Orchestrator Alert - nonce behind for {len(filtered_result)} chains"
@@ -107,15 +109,26 @@ def check_health():
     results = validator.check_health()
     return jsonify(results)
 
+is_scheduler_running = False
 def schedule_validator(validator: OrchestratorValidator):
-    if validator.schedule_interval_minutes <= 0:
+    global is_scheduler_running
+    if is_scheduler_running:
+        logging.info("A scheduler process is already running. Stopping it before starting a new one.")
+        schedule.clear()
+        is_scheduler_running = False
+
+    if validator.schedule_interval_seconds <= 0:
         logging.error("Invalid schedule interval. Cron job not scheduled")
         return
-    schedule.every(validator.schedule_interval_minutes).minutes.do(validator.validate_pending_nonce)
+    print(f"Scheduling validator with interval {validator.schedule_interval_seconds} seconds...")
+    schedule.every(validator.schedule_interval_seconds).seconds.do(validator.validate_pending_nonce)
+    is_scheduler_running = True
 
     while True:
         schedule.run_pending()
         time.sleep(1)
+        if not is_scheduler_running:
+            break
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

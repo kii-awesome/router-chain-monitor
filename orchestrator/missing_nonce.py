@@ -27,10 +27,8 @@ class MissingNonceOrchestrator:
         self.config_manager = config_manager
         self.DEBUG_MODE=self.config_manager.read_config('settings.debug_mode', 'False')
         self.VALIDATOR_ADDRESS=self.config_manager.read_config('settings.validator_address', '')
-        self.SLEEP_TIME_FOR_EVENT_PROCESSING_IN_SEC = int(self.config_manager.read_config('settings.orch_sleep_time_for_event_processing_in_sec', 2))
         self.CHAIN_ENV = self.config_manager.read_config('settings.environment', 'testnet')
-        self.lcd_url = self.config_manager.read_config('settings.lcd_url', '')
-
+        self.lcd_url = self.config_manager.read_config('settings.router_chain_lcd_url', '')
 
     def print_debug(self, *args, **kwargs):
         if self.DEBUG_MODE:
@@ -155,6 +153,9 @@ class MissingNonceOrchestrator:
             }
 
     def process_chain(self, chain_id, chain_config, endpoint, result, multi_chain_config, contract_type):
+        if not result or not result.get('validator'):
+            print(f"Exiting! validator data is empty for chainId -> {chain_id} RPC -> {rpc_url} type -> {contract_type.value}")
+            return []
         rpc_url = chain_config['rpc']
         name=chain_config['name']
         chain_buffer_nonce=chain_config['buffer']
@@ -166,9 +167,6 @@ class MissingNonceOrchestrator:
             print(f"no rpc or contract config for chainId -> {chain_id}")
             return []
         onchain_event_nonce = self.get_recent_nonce(rpc_url, contract_address, contract_type)
-        if not result or not result.get('validator'):
-            print(f"Exiting! result is empty for chainId -> {chain_id} RPC -> {rpc_url} type -> {contract_type.value}")
-            return []
         args_list=(result['validator'], endpoint, chain_id, contract_config, onchain_event_nonce, name, chain_buffer_nonce, contract_type, contract_address)
         res = self.process_validator(args_list)
         return res
@@ -201,7 +199,7 @@ class MissingNonceOrchestrator:
             return None
         tasks = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            print(f'Processing {len(chain_infos)} chains: ', chain_infos.keys())
+            print(f'Processing {len(chain_infos)} chains for {contract_type} type: ', chain_infos.keys())
             args_list = [(chain_id, chain_config, endpoint, validator_info, multi_chain_config, contract_type) for chain_id, chain_config in chain_infos.items()]
             results = list(executor.map(self.process_chain_by_id, args_list))
         if not results:

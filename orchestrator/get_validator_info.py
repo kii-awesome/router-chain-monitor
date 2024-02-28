@@ -12,6 +12,7 @@ from utils.read_config import ConfigManager
 class ValidatorInfo:
     def __init__(self, lcd_url) -> None:
         self.lcd_url = lcd_url
+        self.vals_info = {}
     
     def fetch_json(self, url):
         try:
@@ -25,14 +26,24 @@ class ValidatorInfo:
         if not validator_address:
             print("Validator address is not provided.")
             return None
+        cache_val_info = self.vals_info.get(validator_address)
+        
+        # Cache the validator info for 5 minutes
+        if cache_val_info and int(time.time())-cache_val_info.get('cache_epoch_time')<300:
+            return cache_val_info.get('val_info')
+
         if not self.lcd_url:
             print("LCD URL is not provided.")
             return None
     
         endpoint = self.lcd_url
         validators_info_endpoint = f"{endpoint}/cosmos/staking/v1beta1/validators/{validator_address}"
-        result = self.fetch_json(validators_info_endpoint)
-        return result
+        val_info = self.fetch_json(validators_info_endpoint)
+        self.vals_info[validator_address] = {
+            "val_info": val_info,
+            "cache_epoch_time": int(time.time())
+        }
+        return val_info
 
     def validate_info(self, validator_info):
         isHealthy = True
