@@ -13,6 +13,7 @@ from alert import send_pagerduty_alert
 from orchestrator.health_check import validate_orchestrator_health
 from utils.read_config import ConfigManager
 from orchestrator.get_validator_info import ValidatorInfo
+from chain.balance_check import AccountBalanceFetcher
 
 app = Flask(__name__)
 
@@ -22,9 +23,15 @@ class OrchestratorValidator:
         self.pager_duty_routing = self.config_manager.read_config("settings.pager_duty_routing", "")
         self.orchestrator_health_endpoint = self.config_manager.read_config("settings.orchestrator_health_endpoint", "")
         self.schedule_interval_seconds = int(self.config_manager.read_config("settings.schedule_interval_seconds", "-1"))
+        lcd_url=self.config_manager.read_config("settings.router_chain_lcd_url", "")
+        self.operator_address=self.config_manager.read_config('settings.operator_address', '')
         self.missing_nonce_orchestrator = MissingNonceOrchestrator(self.config_manager)
-        self.validator_info = ValidatorInfo(self.config_manager.read_config("settings.router_chain_lcd_url", ""))
+        self.validator_info = ValidatorInfo(lcd_url)
+
         self.validator_address=self.config_manager.read_config('settings.validator_address', '')
+        self.orchestrator_address=self.config_manager.read_config('settings.orchestrator_address', '')
+        min_balance=self.config_manager.read_config('settings.min_wallet_balance', "4ROUTE")
+        self.balance_fetcher = AccountBalanceFetcher(lcd_url,min_balance, self.validator_address, self.orchestrator_address)
 
     def get_filtered_results(self, result_json):
         return [r for r in result_json if isinstance(r, dict) and r.get('diff_nonces', 0) > 0]
@@ -50,13 +57,15 @@ class OrchestratorValidator:
             logging.info("No unhealthy RPCs found or ORCHESTRATOR_HEALTH_ENDPOINT is not configured.")
 
     def validate_pending_nonce(self) -> None:
-        val_info=self.validator_info.get_validator_info(self.validator_address)
+        val_info=self.validator_info.get_validator_info(self.operator_address)
         
+        # Validate validator health
         validator_health=self.validator_info.validate_info(val_info)
         if not validator_health.get('isHealthy', False):
             title = f"Validator Health Alert - {validator_health.get('moniker', '')} is unhealthy"
             self.send_alert(title, [validator_health])
 
+        # Validate orchestrator health
         for source in ["GATEWAY", "VOYAGER"]:
             result = self.missing_nonce_orchestrator.get_orchestrators_by_pending_nonce(val_info, source)
             if not result:
@@ -68,6 +77,18 @@ class OrchestratorValidator:
             if filtered_result:
                 title = f"{source} Orchestrator Alert - nonce behind for {len(filtered_result)} chains"
                 self.send_alert(title, filtered_result)
+        
+        balance_results = self.balance_fetcher.validate_balances()
+        isValidatorBalanceLow = balance_results.get('isValidatorBalanceLow', False)
+        isOrchestratorBalanceLow = balance_results.get('isOrchestratorBalanceLow', False)
+        if isValidatorBalanceLow:
+            validator_balance = balance_results.get('validator_balance', 0)
+            title = f"Validator Balance Alert - Validator balance is {validator_balance} for {self.validator_address}"
+            self.send_alert(title, [validator_balance])
+        if isOrchestratorBalanceLow:
+            orchestrator_balance = balance_results.get('orchestrator_balance', 0)
+            title = f"Orchestrator Balance Alert - Orchestrator balance is {orchestrator_balance} for {self.orchestrator_address}"
+            self.send_alert(title, [orchestrator_balance])
     
     def check_health(self) -> Dict[str, Any]:
         """
@@ -80,7 +101,7 @@ class OrchestratorValidator:
         else:
             health_results['orchestrator_health'] = 'No unhealthy RPCs found or endpoint is not configured.'
         
-        val_info=self.validator_info.get_validator_info(self.validator_address)
+        val_info=self.validator_info.get_validator_info(self.operator_address)
         validator_health=self.validator_info.validate_info(val_info)
         nonce_results = {}
         for source in ["GATEWAY", "VOYAGER"]:
