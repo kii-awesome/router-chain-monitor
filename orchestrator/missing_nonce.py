@@ -156,9 +156,9 @@ class MissingNonceOrchestrator:
         if not result or not result.get('validator'):
             print(f"Exiting! validator data is empty for chainId -> {chain_id} RPC -> {rpc_url} type -> {contract_type.value}")
             return []
-        rpc_url = chain_config['rpc']
-        name=chain_config['name']
-        chain_buffer_nonce=chain_config['buffer']
+        rpc_url = chain_config.get('rpc', '')
+        name=chain_config.get('name', 'NOT_FOUND')
+        chain_buffer_nonce=chain_config.get('buffer', 0)
         contract_config = multi_chain_config.get(chain_id)
         contract_address = contract_config[0]
         if contract_type == ContractType.VOYAGER:
