@@ -116,7 +116,7 @@
     },
     "8453": {
         "name": "Base",
-        "rpc": "https://base.llamarpc.com",
+        "rpc": "https://base-rpc.publicnode.com",
         "buffer": 2
     }
 }

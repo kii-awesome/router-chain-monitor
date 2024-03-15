@@ -1,8 +1,10 @@
 settings:
-  validator_address: "routervaloper****rh"
+  operator_address: "routervaloper****k"
+  validator_address: "router******l"
+  orchestrator_address: "router******l"
+  min_wallet_balance: "10ROUTE"
   debug_mode: false
-  enable_orch_validation: true
-  pager_duty_routing: "<pager-duty-routing>"
-  orchestrator_health_endpoint: "http://<orch-host>:8001/health"
-  schedule_interval_seconds: 600
-  router_chain_lcd_url: "<router-chain-lcd>"
+  pager_duty_routing: "1dbf******9"
+  orchestrator_health_endpoint: "http://IP:8001/health"
+  schedule_interval_seconds: 5
+  router_chain_lcd_url: "LCD_URL"
